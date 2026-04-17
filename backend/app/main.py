@@ -1,11 +1,17 @@
 from fastapi import FastAPI
-from app.core.database import connect_db, close_db
+from app.core.database import connect_db, close_db, get_db
+from app.routes.auth import router as auth_router
+import os
+
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 app = FastAPI(
     title="Digital You API",
     description="Autonomous AI agent that acts as your digital representative",
     version="0.1.0"
 )
+
+app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 
 @app.on_event("startup")
 async def startup():
@@ -21,7 +27,6 @@ async def ping():
         "status": "ok",
         "message": "Digital You API is alive!"
     }
-from app.core.database import connect_db, close_db, get_db
 
 @app.get("/db-check")
 async def db_check():
