@@ -1,4 +1,4 @@
-\from fastapi import APIRouter
+from fastapi import APIRouter
 from app.services.gmail import fetch_emails
 from app.services.nlp import analyse_email
 
