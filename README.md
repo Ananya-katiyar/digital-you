@@ -12,6 +12,7 @@ An autonomous AI agent that acts as your digital representative. Privacy-first, 
 
 ## Project Structure
 
+```
 digital-you/
 ├── backend/
 │   └── app/
@@ -21,12 +22,13 @@ digital-you/
 │       └── services/    # Gmail, Calendar business logic
 ├── frontend/            # Coming Week 3
 └── docs/                # Architecture notes
+```
 
 ## Setup Instructions
 
 ### 1. Clone the repo
 ```bash
-git clone https://github.com/YOUR_USERNAME/digital-you.git
+git clone https://github.com/Ananya-katiyar/digital-you.git
 cd digital-you/backend
 ```
 
