@@ -3,6 +3,7 @@ from app.core.database import connect_db, close_db, get_db
 from app.routes.auth import router as auth_router
 from app.routes.emails import router as emails_router
 from app.routes.calendar import router as calendar_router
+from app.routes.profile import router as profile_router
 import os
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -16,6 +17,7 @@ app = FastAPI(
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(emails_router, prefix="/emails", tags=["Emails"])
 app.include_router(calendar_router, prefix="/calendar", tags=["Calendar"])
+app.include_router(profile_router, prefix="/profile", tags=["Profile"])
 
 @app.on_event("startup")
 async def startup():
