@@ -5,6 +5,7 @@ from app.routes.emails import router as emails_router
 from app.routes.calendar import router as calendar_router
 from app.routes.profile import router as profile_router
 from app.routes.drafts import router as drafts_router
+from app.routes.decisions import router as decisions_router
 import os
 
 
@@ -21,6 +22,7 @@ app.include_router(emails_router, prefix="/emails", tags=["Emails"])
 app.include_router(calendar_router, prefix="/calendar", tags=["Calendar"])
 app.include_router(profile_router, prefix="/profile", tags=["Profile"])
 app.include_router(drafts_router, prefix="/drafts", tags=["Drafts"])
+app.include_router(decisions_router, prefix="/decisions", tags=["Decisions"])
 
 @app.on_event("startup")
 async def startup():

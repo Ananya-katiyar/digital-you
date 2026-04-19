@@ -25,61 +25,67 @@ MEDIUM_RISK_KEYWORDS = [
     "interview", "offer", "proposal", "negotiat"
 ]
 
-
 def check_user_rules(text: str, rules: list, current_hour: int = None) -> dict:
     """
-    Applies user-defined rules on top of base risk classification.
-    Returns { triggered: bool, reason: str, override_level: str }
+    Applies structured user-defined rules on top of base risk classification.
+    Each rule has: description, rule_type, condition, action
     """
     if current_hour is None:
         current_hour = datetime.now(timezone.utc).hour
 
     for rule in rules:
-        rule_lower = rule.lower()
+        # Support both dict (from MongoDB) and Pydantic model
+        if hasattr(rule, "condition"):
+            condition = rule.condition.lower()
+            description = rule.description
+        else:
+            condition = rule.get("condition", "").lower()
+            description = rule.get("description", "")
 
-        # Time-based rules e.g. "don't schedule after 6 PM"
-        if "after 6" in rule_lower or "after 6pm" in rule_lower or "after 18" in rule_lower:
-            if current_hour >= 18:
-                return {
-                    "triggered": True,
-                    "reason": f"User rule triggered: '{rule}'",
-                    "override_level": "high"
-                }
-
-        if "after 8" in rule_lower or "after 8pm" in rule_lower or "after 20" in rule_lower:
-            if current_hour >= 20:
-                return {
-                    "triggered": True,
-                    "reason": f"User rule triggered: '{rule}'",
-                    "override_level": "high"
-                }
-
-        # Topic-based rules e.g. "escalate HR topics"
-        if "hr" in rule_lower and ("hr" in text or "human resources" in text):
+        # Time-based conditions
+        if condition == "after_6pm" and current_hour >= 18:
             return {
                 "triggered": True,
-                "reason": f"User rule triggered: '{rule}'",
+                "reason": f"User rule triggered: '{description}'",
                 "override_level": "high"
             }
 
-        if "legal" in rule_lower and "legal" in text:
+        if condition == "after_8pm" and current_hour >= 20:
             return {
                 "triggered": True,
-                "reason": f"User rule triggered: '{rule}'",
+                "reason": f"User rule triggered: '{description}'",
                 "override_level": "high"
             }
 
-        if "financial" in rule_lower and any(
+        # Topic-based conditions
+        if condition == "hr_topics" and any(
+            word in text for word in ["hr", "human resources", "resignation", "terminate"]
+        ):
+            return {
+                "triggered": True,
+                "reason": f"User rule triggered: '{description}'",
+                "override_level": "high"
+            }
+
+        if condition == "legal" and any(
+            word in text for word in ["legal", "contract", "lawsuit", "attorney"]
+        ):
+            return {
+                "triggered": True,
+                "reason": f"User rule triggered: '{description}'",
+                "override_level": "high"
+            }
+
+        if condition == "financial" and any(
             word in text for word in ["salary", "payment", "invoice", "budget"]
         ):
             return {
                 "triggered": True,
-                "reason": f"User rule triggered: '{rule}'",
+                "reason": f"User rule triggered: '{description}'",
                 "override_level": "high"
             }
 
     return {"triggered": False, "reason": None, "override_level": None}
-
 
 def classify_risk(
     subject: str,
