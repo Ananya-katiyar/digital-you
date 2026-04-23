@@ -1,6 +1,6 @@
 # Digital You — Daily Progress Log
 
-## Week 1 — Foundation & Auth
+## Phase 1 — Foundation & Auth
 
 ### Day 0 — Apr 8, 2026
 - Created GitHub repo
@@ -58,8 +58,81 @@
 - Tagged v0.1.0-week1 milestone on GitHub
 - Week 1 complete!
 
-## Week 2 — NLP & Risk Engine (Coming Apr 16+)
-- Intent detection
-- Risk classification engine
-- Auto reply generation
-- Approval queue
+## Phase 2 — NLP & Risk Engine
+
+### Day 8 — Apr 16, 2026
+- Installed spaCy + en_core_web_sm model
+- Created nlp.py with detect_intent() function
+- 4 intent classes: casual, scheduling, urgent, promotional
+- Keyword + pattern matching — fully offline, no API calls
+- Manual test on 5 samples — all correct
+- Tagged and committed feat: add NLP intent detection with spaCy
+
+### Day 9 — Apr 17, 2026
+- Installed sumy for offline text summarisation
+- Extended nlp.py with extract_entities() using spaCy NER
+- Added summarise_text() using LexRank algorithm
+- Added analyse_email() returning { intent, entities, summary }
+- Wired NLP analysis into GET /emails/ route
+- Fixed keyword collision bug: 'free' was matching promotional
+- Tagged and committed feat: entity extraction and email summarisation
+
+### Day 10 — Apr 18, 2026
+- Installed Ollama + pulled Mistral 7B model (local, free, offline)
+- Installed LangChain + langchain-ollama + langchain-core
+- Created llm.py with generate_draft_reply() using PromptTemplate | LLM chain
+- Created POST /drafts/ endpoint
+- Draft correctly generated: professional, non-committal, no placeholders
+- Updated requirements.txt
+- Tagged and committed feat: LangChain + Ollama LLM reply draft generation
+
+### Day 11 — Apr 19, 2026
+- Created risk.py with classify_risk() function
+- Three risk levels: low / medium / high with corresponding actions
+- High risk keywords: financial, legal, HR, security, medical
+- Intent-based fallback classification
+- User rule engine: check_user_rules() applies personal overrides
+- Wired risk classification into GET /emails/ route
+- Tagged and committed feat: rule-based risk classification engine
+
+### Day 12 — Apr 20, 2026
+- Upgraded rules from strings to structured UserRule Pydantic model
+- rule_type, condition, action fields — typed and validated
+- Updated check_user_rules() to handle structured rules
+- Created decisions.py service for audit trail logging
+- Created decisions MongoDB collection
+- Built GET /decisions/ and PATCH /decisions/{id}/reviewed routes
+- Tagged and committed feat: user rule engine and decision logging to MongoDB
+
+### Day 13 — Apr 21, 2026
+- Created queue.py service with add_to_queue() and resolve_queue_item()
+- Duplicate check before queuing — prevents flooding
+- Created pending_actions MongoDB collection
+- Built GET /queue/, POST /queue/, POST /queue/{id}/approve, POST /queue/{id}/reject
+- Wired queue + decision logging into GET /emails/ pipeline
+- AFK mode integration — queues all non-low risk when user is away
+- Tagged and committed feat: approval queue with approve/reject endpoints
+
+### Day 14 — Apr 22, 2026
+- Created tests/test_nlp_risk.py with 19 tests
+- Coverage: intent detection (7), risk classification (8), rule engine (4)
+- All edge cases covered including the 'free' keyword regression test
+- Dependency injection pattern used for time-based rule testing
+- 19/19 tests passing in 13.09 seconds
+- Tagged and committed test: NLP intent, risk engine, and rule engine edge cases
+
+### Day 15 — Apr 23, 2026
+- Created tests/test_integration_week2.py
+- Full pipeline tests: NLP → risk → correct output verified
+- All Week 1 + Week 2 endpoints confirmed working
+- Updated README.md with Week 2 endpoints and architecture
+- Updated PROGRESS.md
+- Tagged v0.2.0-week2 milestone on GitHub
+- Week 2 complete!
+
+## Phase 3 — Frontend Dashboard
+- React / Next.js dashboard
+- Email inbox with risk badges
+- Approval queue UI
+- Decision log viewer
+- Profile + rule management

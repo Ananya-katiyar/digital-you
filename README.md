@@ -58,21 +58,52 @@ uvicorn app.main:app --reload
 http://localhost:8000/docs
 
 ## API Endpoints
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | /ping | Health check |
 | GET | /db-check | MongoDB connection check |
 | GET | /auth/google | Google OAuth login |
 | GET | /auth/callback | OAuth callback |
-| GET | /emails/ | Fetch inbox emails |
+| GET | /emails/ | Fetch + analyse inbox emails |
 | GET | /calendar/events | Fetch calendar events |
 | GET | /profile/ | Get user preferences |
 | PATCH | /profile/ | Update user preferences |
+| POST | /drafts/ | Generate LLM draft reply |
+| GET | /decisions/ | View risk decision audit trail |
+| PATCH | /decisions/{id}/reviewed | Mark decision as reviewed |
+| GET | /queue/ | View approval queue |
+| POST | /queue/ | Add item to queue |
+| POST | /queue/{id}/approve | Approve queued item |
+| POST | /queue/{id}/reject | Reject queued item |
+
+## Architecture — Phase 2 NLP & Risk Pipeline
+```
+Incoming Email
+↓
+NLP Analysis (spaCy + sumy)
+→ intent: casual / scheduling / urgent / promotional
+→ entities: names, dates, orgs
+→ summary: condensed text
+↓
+Risk Classification (rule-based)
+→ HIGH risk keywords → escalate
+→ User rules → override
+→ Intent-based → low / medium / high
+↓
+Decision Logger → MongoDB (audit trail)
+↓
+┌─────────────────────────────────────────────┐
+│                         │                   │
+LOW risk              MEDIUM risk         HIGH risk
+auto_draft          suggest_and_approve    escalate
+→ Approval Queue    → Alert user
+```
 
 ## Progress Tracker
 | Phase | Status |
 |-------|--------|
-| Week 1 — Foundation & Auth | ✅ Complete |
-| Week 2 — NLP & Risk Engine | 🔜 Coming |
-| Week 3 — Frontend Dashboard | 🔜 Coming |
-| Week 4 — Deployment | 🔜 Coming |
+| 1 > Foundation & Auth | ✅ Complete |
+| 2 > NLP & Risk Engine | ✅ Complete |
+| 3 > Frontend Dashboard | 🔜 Coming |
+| 4 > Deployment | 🔜 Coming |
