@@ -74,3 +74,52 @@ async def fetch_emails(email: str):
         })
 
     return emails
+
+async def fetch_sent_emails(email: str, max_results: int = 20):
+    """
+    Fetches the user's last N sent emails to analyse writing style.
+    Used by the tone analyser — never stored externally.
+    """
+    credentials = await get_credentials(email)
+    if not credentials:
+        return {"error": "User not found"}
+
+    service = build("gmail", "v1", credentials=credentials)
+    results = service.users().messages().list(
+        userId="me",
+        maxResults=max_results,
+        labelIds=["SENT"]
+    ).execute()
+
+    messages = results.get("messages", [])
+    sent_emails = []
+
+    for msg in messages:
+        msg_detail = service.users().messages().get(
+            userId="me",
+            id=msg["id"],
+            format="full"
+        ).execute()
+
+        # Extract plain text body
+        payload = msg_detail.get("payload", {})
+        body = ""
+
+        if "parts" in payload:
+            for part in payload["parts"]:
+                if part.get("mimeType") == "text/plain":
+                    import base64
+                    data = part.get("body", {}).get("data", "")
+                    if data:
+                        body = base64.urlsafe_b64decode(data).decode("utf-8", errors="ignore")
+                        break
+        elif payload.get("mimeType") == "text/plain":
+            import base64
+            data = payload.get("body", {}).get("data", "")
+            if data:
+                body = base64.urlsafe_b64decode(data).decode("utf-8", errors="ignore")
+
+        if body.strip():
+            sent_emails.append(body.strip())
+
+    return sent_emails
