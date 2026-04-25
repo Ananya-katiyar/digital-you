@@ -16,8 +16,9 @@ from app.routes.access import router as access_router
 from app.routes.send import router as send_router
 import os
 
+if os.getenv("APP_ENV") == "development":
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 app = FastAPI(
     title="Digital You API",
