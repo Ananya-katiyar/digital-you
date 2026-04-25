@@ -15,12 +15,18 @@ async def get_emails(email: str):
     user_rules = []
 
     if user:
+    # Check if agent is paused
+
+        if user.get("agent_paused", False):
+            return {
+                "status": "paused",
+                "message": "Agent is paused — resume from your profile to enable monitoring",
+                "count": 0,
+                "emails": []
+            }
+
         prefs = user.get("preferences", {})
-
-        # AFK mode — queue everything medium+ risk automatically
         afk_mode = prefs.get("afk_mode", False)
-
-        # Load structured rules from user profile
         raw_rules = prefs.get("rules", [])
         user_rules = raw_rules if raw_rules else []
     else:
