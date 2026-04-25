@@ -34,6 +34,10 @@ def check_user_rules(text: str, rules: list, current_hour: int = None) -> dict:
         current_hour = datetime.now(timezone.utc).hour
 
     for rule in rules:
+        # Skip plain strings — old format, not structured rules
+        if isinstance(rule, str):
+            continue
+
         # Support both dict (from MongoDB) and Pydantic model
         if hasattr(rule, "condition"):
             condition = rule.condition.lower()
@@ -41,50 +45,6 @@ def check_user_rules(text: str, rules: list, current_hour: int = None) -> dict:
         else:
             condition = rule.get("condition", "").lower()
             description = rule.get("description", "")
-
-        # Time-based conditions
-        if condition == "after_6pm" and current_hour >= 18:
-            return {
-                "triggered": True,
-                "reason": f"User rule triggered: '{description}'",
-                "override_level": "high"
-            }
-
-        if condition == "after_8pm" and current_hour >= 20:
-            return {
-                "triggered": True,
-                "reason": f"User rule triggered: '{description}'",
-                "override_level": "high"
-            }
-
-        # Topic-based conditions
-        if condition == "hr_topics" and any(
-            word in text for word in ["hr", "human resources", "resignation", "terminate"]
-        ):
-            return {
-                "triggered": True,
-                "reason": f"User rule triggered: '{description}'",
-                "override_level": "high"
-            }
-
-        if condition == "legal" and any(
-            word in text for word in ["legal", "contract", "lawsuit", "attorney"]
-        ):
-            return {
-                "triggered": True,
-                "reason": f"User rule triggered: '{description}'",
-                "override_level": "high"
-            }
-
-        if condition == "financial" and any(
-            word in text for word in ["salary", "payment", "invoice", "budget"]
-        ):
-            return {
-                "triggered": True,
-                "reason": f"User rule triggered: '{description}'",
-                "override_level": "high"
-            }
-
     return {"triggered": False, "reason": None, "override_level": None}
 
 def classify_risk(

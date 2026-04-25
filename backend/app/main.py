@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.core.database import connect_db, close_db, get_db
 from app.routes.auth import router as auth_router
 from app.routes.emails import router as emails_router
@@ -29,6 +31,14 @@ app.include_router(decisions_router, prefix="/decisions", tags=["Decisions"])
 app.include_router(queue_router, prefix="/queue", tags=["Queue"])
 app.include_router(tone_router, prefix="/tone", tags=["Tone"])
 app.include_router(scheduling_router, prefix="/scheduling", tags=["Scheduling"])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 async def startup():
