@@ -184,6 +184,7 @@ export default function Inbox() {
             </button>
           )}
 
+          
           {/* Draft output */}
           {draft && !draft.error && (
             <div style={{
@@ -192,9 +193,54 @@ export default function Inbox() {
               fontSize: "13px", color: "#aaa", lineHeight: "1.6"
             }}>
               <div style={{ fontSize: "11px", color: "#22c55e", marginBottom: "8px" }}>
-                AI DRAFT — review before sending
+                AI DRAFT — edit if needed, then mark as corrected
               </div>
-              {draft.draft}
+
+              {/* Editable draft */}
+              <textarea
+                value={draft.draft}
+                onChange={(e) => setDraft({ ...draft, draft: e.target.value })}
+                rows={4}
+                style={{
+                  width: "100%", backgroundColor: "#0a150a",
+                  border: "1px solid #1a2e1a", borderRadius: "6px",
+                  color: "#ccc", fontSize: "13px", lineHeight: "1.6",
+                  padding: "8px", resize: "vertical", fontFamily: "inherit"
+                }}
+              />
+
+              {/* Save correction button */}
+              <button
+                onClick={async () => {
+                  try {
+                    await fetch(`${import.meta.env.VITE_API_URL}/learning/correct`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        user_email: USER_EMAIL,
+                        email_id: selectedEmail.id,
+                        subject: selectedEmail.subject,
+                        original_draft: draft.draft,
+                        corrected_draft: draft.draft,
+                        intent: draft.intent || selectedEmail.analysis?.intent,
+                        tone: "professional"
+                      })
+                    });
+                    alert("✓ Correction saved! AI will learn from this.");
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }}
+                style={{
+                  marginTop: "8px", width: "100%",
+                  padding: "7px", backgroundColor: "#1a2e1a",
+                  color: "#22c55e", border: "1px solid #22c55e33",
+                  borderRadius: "6px", fontSize: "12px",
+                  cursor: "pointer"
+                }}
+              >
+                💾 Save as correction — teach the AI
+              </button>
             </div>
           )}
 
