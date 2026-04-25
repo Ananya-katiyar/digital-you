@@ -11,6 +11,7 @@ from app.routes.decisions import router as decisions_router
 from app.routes.queue import router as queue_router
 from app.routes.tone import router as tone_router
 from app.routes.scheduling import router as scheduling_router
+from app.routes.learning import router as learning_router
 import os
 
 
@@ -31,6 +32,7 @@ app.include_router(decisions_router, prefix="/decisions", tags=["Decisions"])
 app.include_router(queue_router, prefix="/queue", tags=["Queue"])
 app.include_router(tone_router, prefix="/tone", tags=["Tone"])
 app.include_router(scheduling_router, prefix="/scheduling", tags=["Scheduling"])
+app.include_router(learning_router, prefix="/learning", tags=["Learning"])
 
 app.add_middleware(
     CORSMiddleware,

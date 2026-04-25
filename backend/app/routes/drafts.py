@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from app.services.llm import generate_draft_reply
 from app.services.nlp import detect_intent
 from app.services.scheduling import suggest_meeting_slots
+from app.services.learning import get_recent_corrections
 from app.core.database import get_db
 
 router = APIRouter()
@@ -15,28 +16,27 @@ class DraftRequest(BaseModel):
 
 @router.post("/")
 async def create_draft(request: DraftRequest):
-    """
-    Generates a draft reply using the LLM.
-    If intent is scheduling, also suggests free time slots.
-    Uses tone profile if available for personalised replies.
-    """
     intent = detect_intent(request.subject, request.snippet)
 
-    # Load tone profile from MongoDB if user_email provided
     tone_profile = None
+    corrections = []
+
     if request.user_email:
         db = get_db()
         user = await db.users.find_one({"email": request.user_email})
         if user:
             tone_profile = user.get("tone_profile")
 
-    # Generate the draft reply
+        # Load recent corrections for few-shot learning
+        corrections = await get_recent_corrections(request.user_email, limit=3)
+
     draft = await generate_draft_reply(
         subject=request.subject,
         snippet=request.snippet,
         tone=request.tone,
         intent=intent,
-        tone_profile=tone_profile
+        tone_profile=tone_profile,
+        corrections=corrections
     )
 
     response = {
@@ -44,10 +44,10 @@ async def create_draft(request: DraftRequest):
         "intent": intent,
         "tone": request.tone,
         "tone_profile_used": tone_profile is not None,
+        "corrections_used": len(corrections),
         "draft": draft
     }
 
-    # For scheduling emails — also suggest free slots
     if intent == "scheduling" and request.user_email:
         scheduling = await suggest_meeting_slots(
             user_email=request.user_email,

@@ -1,15 +1,13 @@
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 
-# Initialise the local Ollama model
 llm = OllamaLLM(model="mistral", temperature=0.7)
 
-# Enhanced prompt that uses tone profile signals
 REPLY_PROMPT = PromptTemplate(
     input_variables=[
         "subject", "snippet", "tone", "intent",
         "formality", "avg_sentence_length", "greeting_style",
-        "signoff_style", "uses_exclamations"
+        "signoff_style", "uses_exclamations", "few_shot_examples"
     ],
     template="""
 You are acting as a digital assistant drafting a reply on behalf of the user.
@@ -26,6 +24,8 @@ User's writing style (learned from their past emails):
 - Sign-off style: {signoff_style}
 - Uses exclamations: {uses_exclamations}
 
+{few_shot_examples}
+
 Instructions:
 - Write a reply in a {tone} tone that matches the user's natural writing style
 - Mirror their formality level and sentence length
@@ -40,18 +40,35 @@ Draft reply:
 )
 
 
+def format_few_shot_examples(corrections: list) -> str:
+    """
+    Formats past user corrections as few-shot examples
+    to inject into the prompt.
+    """
+    if not corrections:
+        return ""
+
+    lines = ["User's past corrections (learn from these):"]
+    for i, c in enumerate(corrections[:3], 1):
+        lines.append(f"\nExample {i}:")
+        lines.append(f"  AI wrote: {c['original_draft'][:150]}")
+        lines.append(f"  User corrected to: {c['corrected_draft'][:150]}")
+
+    return "\n".join(lines)
+
+
 async def generate_draft_reply(
     subject: str,
     snippet: str,
     tone: str = "professional",
     intent: str = "casual",
-    tone_profile: dict = None
+    tone_profile: dict = None,
+    corrections: list = None
 ) -> str:
     """
     Generates a draft email reply using the local Mistral model.
-    Now uses tone profile signals for personalised replies.
+    Uses tone profile + past corrections for personalisation.
     """
-    # Use tone profile if available, otherwise use safe defaults
     if tone_profile:
         formality = tone_profile.get("formality", "professional")
         avg_sentence_length = tone_profile.get("avg_sentence_length", 12)
@@ -65,6 +82,8 @@ async def generate_draft_reply(
         signoff_style = "neutral"
         uses_exclamations = "False"
 
+    few_shot_examples = format_few_shot_examples(corrections or [])
+
     try:
         chain = REPLY_PROMPT | llm
         response = await chain.ainvoke({
@@ -76,7 +95,8 @@ async def generate_draft_reply(
             "avg_sentence_length": avg_sentence_length,
             "greeting_style": greeting_style,
             "signoff_style": signoff_style,
-            "uses_exclamations": uses_exclamations
+            "uses_exclamations": uses_exclamations,
+            "few_shot_examples": few_shot_examples
         })
         return response.strip()
     except Exception as e:
