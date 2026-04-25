@@ -21,11 +21,12 @@ SCOPES = [
     "openid",
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/userinfo.profile",
-    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.modify",
     "https://www.googleapis.com/auth/calendar.readonly"
 ]
 
 def create_flow():
+    os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
     return Flow.from_client_config(
         {
             "web": {

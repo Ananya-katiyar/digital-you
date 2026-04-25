@@ -13,6 +13,7 @@ from app.routes.tone import router as tone_router
 from app.routes.scheduling import router as scheduling_router
 from app.routes.learning import router as learning_router
 from app.routes.access import router as access_router
+from app.routes.send import router as send_router
 import os
 
 
@@ -35,6 +36,7 @@ app.include_router(tone_router, prefix="/tone", tags=["Tone"])
 app.include_router(scheduling_router, prefix="/scheduling", tags=["Scheduling"])
 app.include_router(learning_router, prefix="/learning", tags=["Learning"])
 app.include_router(access_router, prefix="/access", tags=["Access Control"])
+app.include_router(send_router, prefix="/send", tags=["Send"])
 
 app.add_middleware(
     CORSMiddleware,

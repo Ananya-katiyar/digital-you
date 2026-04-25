@@ -123,3 +123,38 @@ async def fetch_sent_emails(email: str, max_results: int = 20):
             sent_emails.append(body.strip())
 
     return sent_emails
+import base64
+from email.mime.text import MIMEText
+
+async def send_email(user_email: str, to: str, subject: str, body: str) -> dict:
+    """
+    Sends an email on behalf of the user via Gmail API.
+    Only called on explicit user click — never automatically.
+    """
+    credentials = await get_credentials(user_email)
+    if not credentials:
+        return {"error": "User not found"}
+
+    service = build("gmail", "v1", credentials=credentials)
+
+    # Build the email
+    message = MIMEText(body)
+    message["to"] = to
+    message["subject"] = f"Re: {subject}"
+    message["from"] = user_email
+
+    # Encode it
+    raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+    # Send it
+    sent = service.users().messages().send(
+        userId="me",
+        body={"raw": raw}
+    ).execute()
+
+    return {
+        "sent": True,
+        "message_id": sent.get("id"),
+        "to": to,
+        "subject": f"Re: {subject}"
+    }
