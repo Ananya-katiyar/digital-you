@@ -66,3 +66,17 @@ export async function generateDraft(subject, snippet, tone, userEmail) {
   if (!res.ok) throw new Error("Failed to generate draft");
   return res.json();
 }
+export async function sendReply(userEmail, to, subject, body) {
+  const res = await fetch(`${API_URL}/send/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_email: userEmail,
+      to,
+      subject,
+      body,
+    }),
+  });
+  if (!res.ok) throw new Error("Failed to send email");
+  return res.json();
+}

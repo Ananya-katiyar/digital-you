@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { fetchEmails, generateDraft } from "../api";
+import { fetchEmails, generateDraft, sendReply } from "../api"; // ✅ single import
 import RiskBadge from "../components/RiskBadge";
 import IntentBadge from "../components/IntentBadge";
 
-const USER_EMAIL = "glitchmybrain@gmail.com"; // replace with your Gmail
+const USER_EMAIL = "glitchmybrain@gmail.com";
 
 export default function Inbox() {
   const [emails, setEmails] = useState([]);
@@ -12,6 +12,8 @@ export default function Inbox() {
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [draft, setDraft] = useState(null);
   const [draftLoading, setDraftLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     fetchEmails(USER_EMAIL)
@@ -28,6 +30,7 @@ export default function Inbox() {
   async function handleGenerateDraft(email) {
     setDraftLoading(true);
     setDraft(null);
+    setSent(false); // ✅ reset sent state when generating a new draft
     try {
       const result = await generateDraft(
         email.subject,
@@ -67,7 +70,7 @@ export default function Inbox() {
           {emails.map((email) => (
             <div
               key={email.id}
-              onClick={() => { setSelectedEmail(email); setDraft(null); }}
+              onClick={() => { setSelectedEmail(email); setDraft(null); setSent(false); }}
               style={{
                 backgroundColor: selectedEmail?.id === email.id ? "#1a1a1a" : "#111",
                 border: `1px solid ${selectedEmail?.id === email.id ? "#333" : "#1e1e1e"}`,
@@ -77,7 +80,6 @@ export default function Inbox() {
                 transition: "all 0.15s ease",
               }}
             >
-              {/* Top row */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                 <span style={{ fontSize: "13px", color: "#aaa", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {email.sender}
@@ -88,17 +90,14 @@ export default function Inbox() {
                 </div>
               </div>
 
-              {/* Subject */}
               <div style={{ fontSize: "14px", fontWeight: "500", color: "#fff", marginBottom: "4px" }}>
                 {email.subject}
               </div>
 
-              {/* Snippet */}
               <div style={{ fontSize: "12px", color: "#555", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {email.snippet}
               </div>
 
-              {/* Risk reason */}
               {email.risk?.risk_reason && (
                 <div style={{ fontSize: "11px", color: "#444", marginTop: "6px" }}>
                   ⚡ {email.risk.risk_reason}
@@ -184,7 +183,13 @@ export default function Inbox() {
             </button>
           )}
 
-          
+          {/* Draft error */}
+          {draft?.error && (
+            <div style={{ color: "#ef4444", fontSize: "13px" }}>
+              Error: {draft.error}
+            </div>
+          )}
+
           {/* Draft output */}
           {draft && !draft.error && (
             <div style={{
@@ -193,7 +198,7 @@ export default function Inbox() {
               fontSize: "13px", color: "#aaa", lineHeight: "1.6"
             }}>
               <div style={{ fontSize: "11px", color: "#22c55e", marginBottom: "8px" }}>
-                AI DRAFT — edit if needed, then mark as corrected
+                AI DRAFT — edit if needed, then send
               </div>
 
               {/* Editable draft */}
@@ -209,7 +214,65 @@ export default function Inbox() {
                 }}
               />
 
-              {/* Save correction button */}
+              {/* Send button */}
+              {!sent ? (
+                <button
+                  onClick={async () => {
+                    if (!confirm(`Send this reply to ${selectedEmail.sender}?`)) return;
+                    setSending(true);
+                    try {
+                      await sendReply(
+                        USER_EMAIL,
+                        selectedEmail.sender,
+                        selectedEmail.subject,
+                        draft.draft
+                      );
+                      setSent(true);
+
+                      // Log correction
+                      await fetch(`${import.meta.env.VITE_API_URL}/learning/correct`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          user_email: USER_EMAIL,
+                          email_id: selectedEmail.id,
+                          subject: selectedEmail.subject,
+                          original_draft: draft.draft,
+                          corrected_draft: draft.draft,
+                          intent: draft.intent || selectedEmail.analysis?.intent,
+                          tone: "professional"
+                        })
+                      });
+                    } catch (err) {
+                      alert("Failed to send: " + err.message);
+                    }
+                    setSending(false);
+                  }}
+                  disabled={sending}
+                  style={{
+                    marginTop: "8px", width: "100%",
+                    padding: "9px",
+                    backgroundColor: sending ? "#1a1a1a" : "#1e3a1e",
+                    color: sending ? "#555" : "#22c55e",
+                    border: "1px solid #22c55e33",
+                    borderRadius: "6px", fontSize: "13px",
+                    fontWeight: "500", cursor: sending ? "not-allowed" : "pointer"
+                  }}
+                >
+                  {sending ? "Sending..." : "📤 Send Reply via Gmail"}
+                </button>
+              ) : (
+                <div style={{
+                  marginTop: "8px", padding: "9px", textAlign: "center",
+                  backgroundColor: "#052e16", borderRadius: "6px",
+                  fontSize: "13px", color: "#22c55e",
+                  border: "1px solid #22c55e33"
+                }}>
+                  ✓ Reply sent successfully!
+                </div>
+              )}
+
+              {/* Save correction button */}  {/* ✅ moved inside draft block, appears after send */}
               <button
                 onClick={async () => {
                   try {
