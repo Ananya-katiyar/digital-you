@@ -105,5 +105,5 @@ auto_draft          suggest_and_approve    escalate
 |-------|--------|
 | 1 > Foundation & Auth | ✅ Complete |
 | 2 > NLP & Risk Engine | ✅ Complete |
-| 3 > Frontend Dashboard | 🔜 Coming |
-| 4 > Deployment | 🔜 Coming |
+| 3 > Frontend Dashboard | ✅ Complete |
+| 4 > Deployment | ✅ Complete |
