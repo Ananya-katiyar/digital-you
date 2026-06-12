@@ -5,10 +5,10 @@ An autonomous AI agent that acts as your digital representative. Privacy-first, 
 ## Tech Stack
 - **Backend:** Python + FastAPI
 - **Database:** MongoDB (Motor async driver)
-- **AI:** LangChain + OpenAI (Week 2+)
+- **AI:** LangChain + Ollama
 - **Auth:** Google OAuth 2.0
 - **Encryption:** Fernet (AES-128)
-- **Frontend:** React / Next.js (Week 3+)
+- **Frontend:** React 
 
 ## Project Structure
 
